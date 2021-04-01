@@ -1,0 +1,9 @@
+<library path="libzed_uvc_nodelet">
+    <class name="zed_cam/ZedNodelet"
+           type="zed_uvc::ZedNodelet"
+           base_class_type="nodelet::Nodelet">
+        <description>
+        Nodelet for ZED camera uvc capture.
+        </description>
+    </class>
+</library>

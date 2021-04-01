@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="nodelet" type="nodelet" name="standalone_nodelet"  args="manager" output="screen"/>
+
+    <node pkg="nodelet" type="nodelet" name="zed_uvc_nodelet" args="load zed_cam/ZedNodelet standalone_nodelet" output="screen">
+        <rosparam file="$(find zed_cam)/param/zed_mini_param.yaml"/>
+    </node>
+
+</launch>
