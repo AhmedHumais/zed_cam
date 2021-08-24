@@ -7,6 +7,9 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/distortion_models.h>
+#include <sensor_msgs/Image.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -27,6 +30,8 @@ public:
     virtual ~ZedUVC();
     bool init_cap();
     void start_stream();
+    void fillCamInfo(Mat &cameraMatrix_left, Mat &cameraMatrix_right, cv::Size2i image_size, sensor_msgs::CameraInfoPtr leftCamInfoMsg,
+                     sensor_msgs::CameraInfoPtr rightCamInfoMsg);
     
 private:
     int cam_idx_;
@@ -39,6 +44,7 @@ private:
     cv::Mat map_left_x, map_left_y;
     cv::Mat map_right_x, map_right_y;
     cv::Mat cameraMatrix_left, cameraMatrix_right;
+    sensor_msgs::CameraInfoPtr leftInfoMsg, rightInfoMsg;
     cv::VideoCapture cap_;
     std::unique_ptr<std::thread> grab_thread_;
 

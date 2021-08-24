@@ -11,6 +11,8 @@
 #include <vector>
 #include <fstream>  
 #include <cstdio>
+#include <sensor_msgs/distortion_models.h>
+#include <sensor_msgs/CameraInfo.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -4211,7 +4213,7 @@ bool initCalibration(std::string calibration_file, cv::Size2i image_size, cv::Ma
     T_[2] = camerareader.getValue("stereo:tz_" + resolution_str, 0.f);
 
     // Get left parameters
-    float left_cam_cx = camerareader.getValue("left_cam_" + resolution_str + ":cx", 0.0f);
+    float left_cam_cx = camerareader.getValue("left_cam_" + resolution_str + ":cx", 0.0f); 
     float left_cam_cy = camerareader.getValue("left_cam_" + resolution_str + ":cy", 0.0f);
     float left_cam_fx = camerareader.getValue("left_cam_" + resolution_str + ":fx", 0.0f);
     float left_cam_fy = camerareader.getValue("left_cam_" + resolution_str + ":fy", 0.0f);
@@ -4257,7 +4259,7 @@ bool initCalibration(std::string calibration_file, cv::Size2i image_size, cv::Ma
     distCoeffs_right = (cv::Mat_<double>(5, 1) << right_cam_k1, right_cam_k2, right_cam_p1, right_cam_p2, right_cam_k3);
 
     // Stereo
-    cv::Mat T = (cv::Mat_<double>(3, 1) << T_[0], T_[1], T_[2]);
+    cv::Mat T = (cv::Mat_<double>(3, 1) << T_[0]/1000.0, T_[1], T_[2]);
     std::cout << " Camera Matrix L: \n" << cameraMatrix_left << std::endl << std::endl;
     std::cout << " Camera Matrix R: \n" << cameraMatrix_right << std::endl << std::endl;
 

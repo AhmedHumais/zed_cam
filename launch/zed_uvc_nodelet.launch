@@ -1,8 +1,15 @@
 <launch>
-    <node pkg="nodelet" type="nodelet" name="standalone_nodelet"  args="manager" output="screen"/>
+    <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
 
-    <node pkg="nodelet" type="nodelet" name="zed_uvc_nodelet" args="load zed_cam/ZedNodelet standalone_nodelet" output="screen">
+    <node pkg="nodelet" type="nodelet" name="stereo_camera" args="load zed_cam/ZedNodelet nodelet_manager" output="screen">
         <rosparam file="$(find zed_cam)/param/zed_mini_param.yaml"/>
     </node>
+
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 base_link cam_left" />
+    <node pkg="rtabmap_ros" type="stereo_odometry" name="odom_node" output="screen">
+    <param name="config_path" value="~/.ros/rtabmap.cfg"/>
+    </node> -->
+    <!-- <node pkg="nodelet" type="nodelet" name="stereo_odom_nodelet" args="load rtabmap_ros/stereo_odometry nodelet_manager" output="screen">
+    </node> -->
 
 </launch>

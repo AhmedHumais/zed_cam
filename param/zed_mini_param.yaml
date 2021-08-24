@@ -1,12 +1,16 @@
 
 # serial no. of camera to download calibration file
-serial_no: 10026849
+#serial_no: 10026849
+serial_no: 2566
+cam_index: 4
 
 publish_raw: false
 # topic to publish left camera image
-left_cam_topic: "/cam0/image_raw"
-right_cam_topic: "/cam1/image_raw"
+left_cam_topic: "left/image_rect"
+right_cam_topic: "right/image_rect"
 frame_rate: 100
 resolution: [672, 376]
-is_color: false
+# resolution: [1280, 720]
+
+is_color: true
 

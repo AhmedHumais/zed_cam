@@ -45,7 +45,59 @@ bool ZedUVC::init_cap(){
     cap_.set(cv::CAP_PROP_FPS, frame_rate_);
     cap_.grab();
 
+    leftInfoMsg.reset(new sensor_msgs::CameraInfo());
+    rightInfoMsg.reset(new sensor_msgs::CameraInfo());
+    fillCamInfo(cameraMatrix_left, cameraMatrix_right, cv::Size2i(resolution_[0],resolution_[1]), leftInfoMsg, rightInfoMsg);
+
     return true;
+}
+
+void ZedUVC::fillCamInfo(Mat &cameraMatrix_left, Mat &cameraMatrix_right, cv::Size2i image_size, sensor_msgs::CameraInfoPtr leftCamInfoMsg,
+                        sensor_msgs::CameraInfoPtr rightCamInfoMsg){
+    leftCamInfoMsg->distortion_model =
+            sensor_msgs::distortion_models::PLUMB_BOB;
+    rightCamInfoMsg->distortion_model =
+            sensor_msgs::distortion_models::PLUMB_BOB;
+    leftCamInfoMsg->D.resize(5, 0.0);
+    rightCamInfoMsg->D.resize(5, 0.0);
+
+    leftCamInfoMsg->R.fill(0.0);
+    rightCamInfoMsg->R.fill(0.0);
+    
+    for (size_t i = 0; i < 3; i++) {
+        // identity
+        rightCamInfoMsg->R[i + i * 3] = 1;
+        leftCamInfoMsg->R[i + i * 3] = 1;
+    }
+    leftCamInfoMsg->P.fill(0.0);
+    rightCamInfoMsg->P.fill(0.0);
+    leftCamInfoMsg->K.fill(0.0);
+    rightCamInfoMsg->K.fill(0.0);
+
+    leftCamInfoMsg->K[0] = cameraMatrix_left.at<double>(0,0);
+    leftCamInfoMsg->K[2] = cameraMatrix_left.at<double>(0,2);
+    leftCamInfoMsg->K[4] = cameraMatrix_left.at<double>(1,1);
+    leftCamInfoMsg->K[5] = cameraMatrix_left.at<double>(1,2);
+    leftCamInfoMsg->K[8] = 1.0;
+
+    rightCamInfoMsg->K[0] = cameraMatrix_right.at<double>(0,0);
+    rightCamInfoMsg->K[2] = cameraMatrix_right.at<double>(0,2);
+    rightCamInfoMsg->K[4] = cameraMatrix_right.at<double>(1,1);
+    rightCamInfoMsg->K[5] = cameraMatrix_right.at<double>(1,2);
+    rightCamInfoMsg->K[8] = 1.0;
+
+    for (size_t i = 0; i < 3; i++) {
+        for (size_t j = 0; j < 4; j++) {
+            rightCamInfoMsg->P[j + i * 4] = cameraMatrix_left.at<double>(i,j);
+            leftCamInfoMsg->P[j + i * 4] = cameraMatrix_right.at<double>(i,j);
+        }
+    }
+
+    leftCamInfoMsg->width = rightCamInfoMsg->width = static_cast<uint32_t>(image_size.width);
+    leftCamInfoMsg->height = rightCamInfoMsg->height = static_cast<uint32_t>(image_size.height);
+    leftCamInfoMsg->header.frame_id = "cam_left";
+    rightCamInfoMsg->header.frame_id = "cam_right";
+
 }
 
 void ZedUVC::start_stream(){
@@ -56,8 +108,8 @@ void ZedUVC::start_stream(){
 
 void ZedUVC::grabLoop(){
     image_transport::ImageTransport it(pnh_);
-    image_transport::Publisher img_pub_left = it.advertise(left_topic_name, 10);
-    image_transport::Publisher img_pub_right = it.advertise(right_topic_name, 10);
+    image_transport::CameraPublisher img_pub_left = it.advertiseCamera(left_topic_name, 1);
+    image_transport::CameraPublisher img_pub_right = it.advertiseCamera(right_topic_name, 1);
     ros::Time grab_time;
     cv_bridge::CvImage img_msg;
     int seq = 0;
@@ -92,12 +144,14 @@ void ZedUVC::grabLoop(){
                 img_msg.image = pub_raw_? left_raw : left_rect;
                 img_msg.header.frame_id = "cam_left";
 
-                img_pub_left.publish(img_msg.toImageMsg());
+                leftInfoMsg->header.stamp = grab_time;
+                img_pub_left.publish(img_msg.toImageMsg(), leftInfoMsg);
 
                 img_msg.image = pub_raw_? right_raw : right_rect;
                 img_msg.header.frame_id = "cam_right";
 
-                img_pub_right.publish(img_msg.toImageMsg());
+                rightInfoMsg->header.stamp = grab_time; 
+                img_pub_right.publish(img_msg.toImageMsg(), rightInfoMsg);
             }
             else{
                 std::cerr << "[WARN] Frame missed. \n";
